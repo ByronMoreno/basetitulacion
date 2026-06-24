@@ -468,3 +468,141 @@ CREATE TABLE detalle_evaluacion (
 -- =====================================================
 -- FIN DE MODELO ACADÉMICO Y FASE PRÁCTICA
 -- =====================================================
+
+-- =====================================================
+-- MÓDULO DE VINCULACIÓN CON LA SOCIEDAD
+-- =====================================================
+
+-- 1. ASIGNACIÓN Y PROYECTO
+CREATE TABLE vinculacion_estudiante (
+    id_vinculacion BIGSERIAL PRIMARY KEY,
+    id_matricula_detalle BIGINT NOT NULL UNIQUE,
+    id_empresa BIGINT NOT NULL,
+    id_docente BIGINT NOT NULL,
+    nombre_proyecto VARCHAR(255) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    total_horas_estudiante NUMERIC(5,2) DEFAULT 0,
+    total_horas_docente NUMERIC(5,2) DEFAULT 0,
+    estado VARCHAR(30) DEFAULT 'EN_CURSO',
+    CONSTRAINT fk_ve_matricula_detalle FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
+    CONSTRAINT fk_ve_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT fk_ve_docente FOREIGN KEY (id_docente) REFERENCES docente(id_docente)
+);
+
+-- 2. REGISTRO DE ACTIVIDADES DEL ESTUDIANTE
+CREATE TABLE vinculacion_actividad_estudiante (
+    id_actividad_estudiante BIGSERIAL PRIMARY KEY,
+    id_vinculacion BIGINT NOT NULL,
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    horas_total NUMERIC(5,2) NOT NULL,
+    actividades_realizadas TEXT NOT NULL,
+    CONSTRAINT fk_vae_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES vinculacion_estudiante(id_vinculacion)
+);
+
+-- 3. REGISTRO DE ASISTENCIA DEL TUTOR / DOCENTE
+CREATE TABLE vinculacion_asistencia_tutor (
+    id_asistencia_tutor BIGSERIAL PRIMARY KEY,
+    id_vinculacion BIGINT NOT NULL,
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    horas_total NUMERIC(5,2) NOT NULL,
+    observaciones TEXT,
+    CONSTRAINT fk_vat_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES vinculacion_estudiante(id_vinculacion)
+);
+
+-- 4. INFORME DE ACTIVIDADES
+CREATE TABLE vinculacion_informe (
+    id_informe BIGSERIAL PRIMARY KEY,
+    id_vinculacion BIGINT NOT NULL,
+    fecha_informe DATE NOT NULL,
+    actividad_macro TEXT NOT NULL,
+    resultado_aprendizaje TEXT NOT NULL,
+    CONSTRAINT fk_vi_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES vinculacion_estudiante(id_vinculacion)
+);
+
+-- 5. EVALUACIÓN DE VINCULACIÓN
+CREATE TABLE evaluacion_vinculacion (
+    id_evaluacion_vinc BIGSERIAL PRIMARY KEY,
+    id_vinculacion BIGINT NOT NULL,
+    id_rubrica BIGINT NOT NULL,
+    nota_final NUMERIC(5,2),
+    fecha_evaluacion DATE DEFAULT CURRENT_DATE,
+    CONSTRAINT fk_ev_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES vinculacion_estudiante(id_vinculacion),
+    CONSTRAINT fk_ev_rubrica FOREIGN KEY (id_rubrica) REFERENCES catalogo_rubrica(id_rubrica)
+);
+
+CREATE TABLE detalle_evaluacion_vinculacion (
+    id_detalle_vinc BIGSERIAL PRIMARY KEY,
+    id_evaluacion_vinc BIGINT NOT NULL,
+    id_item BIGINT NOT NULL,
+    puntaje_asignado NUMERIC(5,2) NOT NULL,
+    CONSTRAINT fk_dev_evaluacion FOREIGN KEY (id_evaluacion_vinc) REFERENCES evaluacion_vinculacion(id_evaluacion_vinc),
+    CONSTRAINT fk_dev_item FOREIGN KEY (id_item) REFERENCES item_rubrica(id_item)
+);
+
+-- =====================================================
+-- FIN DE MODELO DE VINCULACIÓN
+-- =====================================================
+
+-- =====================================================
+-- MÓDULO DE PORTAFOLIO DOCENTE (ACEPTACIÓN DE NOTAS)
+-- =====================================================
+
+CREATE TABLE portafolio_reporte_notas (
+    id_reporte_notas BIGSERIAL PRIMARY KEY,
+    id_oferta_asignatura BIGINT NOT NULL,
+    tipo_reporte VARCHAR(20) NOT NULL CHECK (tipo_reporte IN ('APORTE_1', 'APORTE_2', 'SUPLETORIO')),
+    fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ruta_archivo_pdf VARCHAR(255),
+    estado VARCHAR(20) DEFAULT 'GENERADO',
+    CONSTRAINT fk_prn_oferta FOREIGN KEY (id_oferta_asignatura) REFERENCES oferta_asignatura(id_oferta_asignatura),
+    CONSTRAINT uk_prn_oferta_tipo UNIQUE (id_oferta_asignatura, tipo_reporte)
+);
+
+CREATE TABLE portafolio_aceptacion_estudiante (
+    id_aceptacion BIGSERIAL PRIMARY KEY,
+    id_reporte_notas BIGINT NOT NULL,
+    id_matricula_detalle BIGINT NOT NULL,
+    nota_registrada NUMERIC(5,2),
+    estado_aceptacion VARCHAR(20) DEFAULT 'PENDIENTE',
+    fecha_aceptacion TIMESTAMP,
+    CONSTRAINT fk_pae_reporte FOREIGN KEY (id_reporte_notas) REFERENCES portafolio_reporte_notas(id_reporte_notas),
+    CONSTRAINT fk_pae_matricula_det FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
+    CONSTRAINT uk_pae_reporte_matricula UNIQUE (id_reporte_notas, id_matricula_detalle)
+);
+
+-- Vista para extraer todos los datos del reporte de notas fácilmente
+CREATE OR REPLACE VIEW vw_reporte_notas AS
+SELECT 
+    oa.id_oferta_asignatura,
+    oa.id_periodo_carrera,
+    c.nombre AS carrera,
+    n.nombre AS nivel,
+    a.nombre AS asignatura,
+    p.nombre AS paralelo,
+    j.nombre AS jornada,
+    d.nombres || ' ' || d.apellidos AS docente,
+    e.cedula AS estudiante_cedula,
+    e.nombres || ' ' || e.apellidos AS estudiante_nombre,
+    md.nota_ap1,
+    md.nota_ap2,
+    md.nota_supletorio,
+    md.nota_final
+FROM oferta_asignatura oa
+JOIN asignatura a ON oa.id_asignatura = a.id_asignatura
+JOIN nivel n ON a.id_nivel = n.id_nivel
+JOIN carrera c ON n.id_carrera = c.id_carrera
+JOIN paralelo p ON oa.id_paralelo = p.id_paralelo
+JOIN jornada j ON oa.id_jornada = j.id_jornada
+JOIN docente d ON oa.id_docente = d.id_docente
+JOIN matricula_detalle md ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+JOIN matricula m ON md.id_matricula = m.id_matricula
+JOIN estudiante e ON m.id_estudiante = e.id_estudiante;
+
+-- =====================================================
+-- FIN DE MÓDULO PORTAFOLIO DOCENTE
+-- =====================================================
