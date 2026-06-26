@@ -338,6 +338,7 @@ CREATE TABLE tutor_empresarial (
 -- 3. ASIGNACIÓN DE PRÁCTICA ESTUDIANTIL
 CREATE TABLE practica_estudiante (
     id_practica BIGSERIAL PRIMARY KEY,
+    id_periodo BIGINT NOT NULL,
     id_matricula_detalle BIGINT NOT NULL UNIQUE,
     id_empresa BIGINT NOT NULL,
     id_tutor_empresarial BIGINT NOT NULL,
@@ -345,6 +346,7 @@ CREATE TABLE practica_estudiante (
     total_horas_requeridas INTEGER DEFAULT 400,
     total_horas_cumplidas INTEGER DEFAULT 0,
     estado VARCHAR(30) DEFAULT 'EN_CURSO',
+    CONSTRAINT fk_pe_periodo FOREIGN KEY (id_periodo) REFERENCES periodo_academico(id_periodo),
     CONSTRAINT fk_pe_matricula_detalle FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
     CONSTRAINT fk_pe_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),
     CONSTRAINT fk_pe_tutor_empresarial FOREIGN KEY (id_tutor_empresarial) REFERENCES tutor_empresarial(id_tutor_empresarial),
@@ -476,6 +478,7 @@ CREATE TABLE detalle_evaluacion (
 -- 1. ASIGNACIÓN Y PROYECTO
 CREATE TABLE vinculacion_estudiante (
     id_vinculacion BIGSERIAL PRIMARY KEY,
+    id_periodo BIGINT NOT NULL,
     id_matricula_detalle BIGINT NOT NULL UNIQUE,
     id_empresa BIGINT NOT NULL,
     id_docente BIGINT NOT NULL,
@@ -485,6 +488,7 @@ CREATE TABLE vinculacion_estudiante (
     total_horas_estudiante NUMERIC(5,2) DEFAULT 0,
     total_horas_docente NUMERIC(5,2) DEFAULT 0,
     estado VARCHAR(30) DEFAULT 'EN_CURSO',
+    CONSTRAINT fk_ve_periodo FOREIGN KEY (id_periodo) REFERENCES periodo_academico(id_periodo),
     CONSTRAINT fk_ve_matricula_detalle FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
     CONSTRAINT fk_ve_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),
     CONSTRAINT fk_ve_docente FOREIGN KEY (id_docente) REFERENCES docente(id_docente)
@@ -554,11 +558,13 @@ CREATE TABLE detalle_evaluacion_vinculacion (
 
 CREATE TABLE portafolio_reporte_notas (
     id_reporte_notas BIGSERIAL PRIMARY KEY,
+    id_periodo BIGINT NOT NULL,
     id_oferta_asignatura BIGINT NOT NULL,
     tipo_reporte VARCHAR(20) NOT NULL CHECK (tipo_reporte IN ('APORTE_1', 'APORTE_2', 'SUPLETORIO')),
     fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ruta_archivo_pdf VARCHAR(255),
     estado VARCHAR(20) DEFAULT 'GENERADO',
+    CONSTRAINT fk_prn_periodo FOREIGN KEY (id_periodo) REFERENCES periodo_academico(id_periodo),
     CONSTRAINT fk_prn_oferta FOREIGN KEY (id_oferta_asignatura) REFERENCES oferta_asignatura(id_oferta_asignatura),
     CONSTRAINT uk_prn_oferta_tipo UNIQUE (id_oferta_asignatura, tipo_reporte)
 );

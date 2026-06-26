@@ -103,11 +103,11 @@ Este documento contiene ejemplos de datos (3 tuplas por tabla) para entender el 
 | 7 | 179003 | MegaRedes S.A. | | 14 | 7 | Jorge Torres | Sup. IT |
 
 **13. Tabla: `practica_estudiante`**
-| id_practica | id_matricula_detalle | id_empresa | id_tutor_empresarial | id_docente | total_horas |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 50 | 1005 (Juan) | 5 | 12 | 8 | 400 |
-| 51 | 1006 (María) | 6 | 13 | 9 | 400 |
-| 52 | 1007 (Pedro) | 7 | 14 | 8 | 400 |
+| id_practica | id_periodo | id_matricula_detalle | id_empresa | id_tutor_empresarial | id_docente | total_horas |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 50 | 10 | 1005 (Juan) | 5 | 12 | 8 | 400 |
+| 51 | 10 | 1006 (María) | 6 | 13 | 9 | 400 |
+| 52 | 10 | 1007 (Pedro) | 7 | 14 | 8 | 400 |
 
 **14. Tabla: `item_plan_marco`**
 | id_item_pm | id_plan_marco | resultado_aprendizaje | nivel_logro_esperado |
@@ -174,11 +174,11 @@ Este documento contiene ejemplos de datos (3 tuplas por tabla) para entender el 
 ## FASE 6: MÓDULO DE VINCULACIÓN CON LA SOCIEDAD
 
 **22. Tabla: `vinculacion_estudiante`**
-| id | id_matricula_detalle | empresa | docente | proyecto | fecha_inicio | fecha_fin |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 1005 (Juan) | 5 | 8 | Alfabetización Digital | 2025-10-20 | 2025-12-20 |
-| 2 | 1006 (María) | 6 | 9 | Reciclaje Tecnológico | 2025-10-21 | 2025-12-21 |
-| 3 | 1007 (Pedro) | 7 | 8 | Desarrollo Web ONGs | 2025-10-22 | 2025-12-22 |
+| id | id_periodo | id_matricula_detalle | empresa | docente | proyecto | fecha_inicio | fecha_fin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | 9 | 1005 (Juan) | 5 | 8 | Alfabetización Digital | 2025-10-20 | 2025-12-20 |
+| 2 | 9 | 1006 (María) | 6 | 9 | Reciclaje Tecnológico | 2025-10-21 | 2025-12-21 |
+| 3 | 9 | 1007 (Pedro) | 7 | 8 | Desarrollo Web ONGs | 2025-10-22 | 2025-12-22 |
 
 **23. Tabla: `vinculacion_actividad_estudiante` (Horas Alumno)**
 | id | id_vinc | fecha | h_inicio | h_fin | total_h | actividades |
@@ -213,11 +213,11 @@ Este documento contiene ejemplos de datos (3 tuplas por tabla) para entender el 
 ## FASE 7: PORTAFOLIO DOCENTE (ACEPTACIÓN DE NOTAS)
 
 **27. Tabla: `portafolio_reporte_notas` (Cabecera)**
-| id_reporte | id_oferta_asignatura | tipo_reporte | fecha_generacion | estado |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | 150 (Prácticas V) | APORTE_1 | 2026-05-15 10:00 | GENERADO |
-| 2 | 150 (Prácticas V) | APORTE_2 | 2026-07-15 11:00 | GENERADO |
-| 3 | 151 (Móvil) | APORTE_1 | 2026-05-16 09:30 | GENERADO |
+| id_reporte | id_periodo | id_oferta_asignatura | tipo_reporte | fecha_generacion | estado |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | 10 | 150 (Prácticas V) | APORTE_1 | 2026-05-15 10:00 | GENERADO |
+| 2 | 10 | 150 (Prácticas V) | APORTE_2 | 2026-07-15 11:00 | GENERADO |
+| 3 | 10 | 151 (Móvil) | APORTE_1 | 2026-05-16 09:30 | GENERADO |
 
 **28. Tabla: `portafolio_aceptacion_estudiante` (Firma Estudiante)**
 | id_aceptacion | id_reporte | id_matricula_det | nota_registrada | estado_aceptacion |
