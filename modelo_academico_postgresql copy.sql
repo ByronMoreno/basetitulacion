@@ -116,31 +116,13 @@ CREATE TABLE periodo_carrera (
         UNIQUE(id_periodo,id_carrera)
 );
 
-CREATE TABLE periodo_docente (
-    id_periodo_docente BIGSERIAL PRIMARY KEY,
-    id_periodo BIGINT NOT NULL,
-    id_docente BIGINT NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
-    CONSTRAINT fk_pd_periodo
-        FOREIGN KEY (id_periodo)
-        REFERENCES periodo_academico(id_periodo),
-
-    CONSTRAINT fk_pd_docente
-        FOREIGN KEY (id_docente)
-        REFERENCES docente(id_docente),
-
-    CONSTRAINT uk_periodo_docente
-        UNIQUE (id_periodo, id_docente)
-);
-
 -- Oferta académica por período y carrera
 CREATE TABLE oferta_asignatura (
     id_oferta_asignatura BIGSERIAL PRIMARY KEY,
 
     id_periodo_carrera BIGINT NOT NULL,
     id_asignatura BIGINT NOT NULL,
-    id_periodo_docente BIGINT NOT NULL,
+    id_docente BIGINT NOT NULL,
     id_jornada BIGINT NOT NULL,
     id_paralelo BIGINT NOT NULL,
 
@@ -157,9 +139,9 @@ CREATE TABLE oferta_asignatura (
         FOREIGN KEY (id_asignatura)
         REFERENCES asignatura(id_asignatura),
 
-    CONSTRAINT fk_oferta_periodo_docente
-        FOREIGN KEY (id_periodo_docente)
-        REFERENCES periodo_docente(id_periodo_docente),
+    CONSTRAINT fk_oferta_docente
+        FOREIGN KEY (id_docente)
+        REFERENCES docente(id_docente),
 
     CONSTRAINT fk_oferta_jornada
         FOREIGN KEY (id_jornada)
@@ -275,14 +257,8 @@ ON asignatura(id_nivel);
 CREATE INDEX idx_oferta_periodo_carrera
 ON oferta_asignatura(id_periodo_carrera);
 
-CREATE INDEX idx_oferta_periodo_docente
-ON oferta_asignatura(id_periodo_docente);
-
-CREATE INDEX idx_periodo_docente_periodo
-ON periodo_docente(id_periodo);
-
-CREATE INDEX idx_periodo_docente_docente
-ON periodo_docente(id_docente);
+CREATE INDEX idx_oferta_docente
+ON oferta_asignatura(id_docente);
 
 CREATE INDEX idx_matricula_estudiante
 ON matricula(id_estudiante);
@@ -348,66 +324,23 @@ CREATE TABLE tutor_empresarial (
     CONSTRAINT fk_te_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa)
 );
 
-CREATE TABLE periodo_empresa (
-    id_periodo_empresa BIGSERIAL PRIMARY KEY,
-    id_periodo BIGINT NOT NULL,
-    id_empresa BIGINT NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
-    CONSTRAINT fk_pe_periodo
-        FOREIGN KEY (id_periodo)
-        REFERENCES periodo_academico(id_periodo),
-
-    CONSTRAINT fk_pe_empresa
-        FOREIGN KEY (id_empresa)
-        REFERENCES empresa(id_empresa),
-
-    CONSTRAINT uk_periodo_empresa
-        UNIQUE (id_periodo, id_empresa)
-);
-
-CREATE TABLE periodo_tutor_empresarial (
-    id_periodo_tutor_empresarial BIGSERIAL PRIMARY KEY,
-    id_periodo BIGINT NOT NULL,
-    id_tutor_empresarial BIGINT NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
-    CONSTRAINT fk_pte_periodo
-        FOREIGN KEY (id_periodo)
-        REFERENCES periodo_academico(id_periodo),
-
-    CONSTRAINT fk_pte_tutor_empresarial
-        FOREIGN KEY (id_tutor_empresarial)
-        REFERENCES tutor_empresarial(id_tutor_empresarial),
-
-    CONSTRAINT uk_periodo_tutor_empresarial
-        UNIQUE (id_periodo, id_tutor_empresarial)
-);
-
-CREATE INDEX idx_periodo_empresa_periodo ON periodo_empresa(id_periodo);
-CREATE INDEX idx_periodo_empresa_empresa ON periodo_empresa(id_empresa);
-CREATE INDEX idx_periodo_tutor_periodo ON periodo_tutor_empresarial(id_periodo);
-CREATE INDEX idx_periodo_tutor_tutor ON periodo_tutor_empresarial(id_tutor_empresarial);
-
 -- 3. ASIGNACIÓN DE PRÁCTICA ESTUDIANTIL
 CREATE TABLE practica_estudiante (
     id_practica BIGSERIAL PRIMARY KEY,
+    id_periodo BIGINT NOT NULL,
     id_matricula_detalle BIGINT NOT NULL UNIQUE,
-    id_periodo_empresa BIGINT NOT NULL,
-    id_periodo_tutor_empresarial BIGINT NOT NULL,
-    id_periodo_docente BIGINT NOT NULL,
+    id_empresa BIGINT NOT NULL,
+    id_tutor_empresarial BIGINT NOT NULL,
+    id_docente BIGINT NOT NULL,
     total_horas_requeridas INTEGER DEFAULT 400,
     total_horas_cumplidas INTEGER DEFAULT 0,
     estado VARCHAR(30) DEFAULT 'EN_CURSO',
+    CONSTRAINT fk_pe_periodo FOREIGN KEY (id_periodo) REFERENCES periodo_academico(id_periodo),
     CONSTRAINT fk_pe_matricula_detalle FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
-    CONSTRAINT fk_pe_periodo_empresa FOREIGN KEY (id_periodo_empresa) REFERENCES periodo_empresa(id_periodo_empresa),
-    CONSTRAINT fk_pe_periodo_tutor FOREIGN KEY (id_periodo_tutor_empresarial) REFERENCES periodo_tutor_empresarial(id_periodo_tutor_empresarial),
-    CONSTRAINT fk_pe_periodo_docente FOREIGN KEY (id_periodo_docente) REFERENCES periodo_docente(id_periodo_docente)
+    CONSTRAINT fk_pe_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT fk_pe_tutor_empresarial FOREIGN KEY (id_tutor_empresarial) REFERENCES tutor_empresarial(id_tutor_empresarial),
+    CONSTRAINT fk_pe_docente FOREIGN KEY (id_docente) REFERENCES docente(id_docente)
 );
-
-CREATE INDEX idx_pe_periodo_empresa ON practica_estudiante(id_periodo_empresa);
-CREATE INDEX idx_pe_periodo_tutor ON practica_estudiante(id_periodo_tutor_empresarial);
-CREATE INDEX idx_pe_periodo_docente ON practica_estudiante(id_periodo_docente);
 
 -- 4. PLAN MARCO DE FORMACIÓN
 CREATE TABLE plan_marco_formacion (
@@ -534,22 +467,21 @@ CREATE TABLE detalle_evaluacion (
 -- 1. ASIGNACIÓN Y PROYECTO
 CREATE TABLE vinculacion_estudiante (
     id_vinculacion BIGSERIAL PRIMARY KEY,
+    id_periodo BIGINT NOT NULL,
     id_matricula_detalle BIGINT NOT NULL UNIQUE,
-    id_periodo_empresa BIGINT NOT NULL,
-    id_periodo_docente BIGINT NOT NULL,
+    id_empresa BIGINT NOT NULL,
+    id_docente BIGINT NOT NULL,
     nombre_proyecto VARCHAR(255) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL,
     total_horas_estudiante NUMERIC(5,2) DEFAULT 0,
     total_horas_docente NUMERIC(5,2) DEFAULT 0,
     estado VARCHAR(30) DEFAULT 'EN_CURSO',
+    CONSTRAINT fk_ve_periodo FOREIGN KEY (id_periodo) REFERENCES periodo_academico(id_periodo),
     CONSTRAINT fk_ve_matricula_detalle FOREIGN KEY (id_matricula_detalle) REFERENCES matricula_detalle(id_matricula_detalle),
-    CONSTRAINT fk_ve_periodo_empresa FOREIGN KEY (id_periodo_empresa) REFERENCES periodo_empresa(id_periodo_empresa),
-    CONSTRAINT fk_ve_periodo_docente FOREIGN KEY (id_periodo_docente) REFERENCES periodo_docente(id_periodo_docente)
+    CONSTRAINT fk_ve_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT fk_ve_docente FOREIGN KEY (id_docente) REFERENCES docente(id_docente)
 );
-
-CREATE INDEX idx_ve_periodo_empresa ON vinculacion_estudiante(id_periodo_empresa);
-CREATE INDEX idx_ve_periodo_docente ON vinculacion_estudiante(id_periodo_docente);
 
 -- 2. REGISTRO DE ACTIVIDADES DEL ESTUDIANTE
 CREATE TABLE vinculacion_actividad_estudiante (
@@ -661,8 +593,7 @@ JOIN nivel n ON a.id_nivel = n.id_nivel
 JOIN carrera c ON n.id_carrera = c.id_carrera
 JOIN paralelo p ON oa.id_paralelo = p.id_paralelo
 JOIN jornada j ON oa.id_jornada = j.id_jornada
-JOIN periodo_docente pd ON oa.id_periodo_docente = pd.id_periodo_docente
-JOIN docente d ON pd.id_docente = d.id_docente
+JOIN docente d ON oa.id_docente = d.id_docente
 JOIN matricula_detalle md ON oa.id_oferta_asignatura = md.id_oferta_asignatura
 JOIN matricula m ON md.id_matricula = m.id_matricula
 JOIN estudiante e ON m.id_estudiante = e.id_estudiante;
